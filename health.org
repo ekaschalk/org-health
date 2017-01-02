@@ -1,4 +1,18 @@
+https://dev.fitbit.com/docs/basics/
+https://dev.fitbit.com/apps/new
+https://github.com/orcasgit/python-fitbit
+http://python-fitbit.readthedocs.io/en/latest/
+
 #+begin_src python
   import fitbit 
 
+  client = fitbit.FitbitOauth2Client('client_id', 'client_secret')
+  res = client.make_request("https://api.fitbit.com/1/user/-/activities.json",
+                            None, method='GET')
+
+  return client
 #+end_src
+
+#+RESULTS:
+: <fitbit.api.FitbitOauth2Client object at 0x000001535DE59C50>
+
