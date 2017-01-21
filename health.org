@@ -1,18 +1,26 @@
+* Notes
 https://dev.fitbit.com/docs/basics/
 https://dev.fitbit.com/apps/new
 https://github.com/orcasgit/python-fitbit
 http://python-fitbit.readthedocs.io/en/latest/
 
-#+begin_src python
-  import fitbit 
+* Features
 
-  client = fitbit.FitbitOauth2Client('client_id', 'client_secret')
-  res = client.make_request("https://api.fitbit.com/1/user/-/activities.json",
-                            None, method='GET')
+* Code
+#+begin_src python :results output
+import os
+import fitbit 
 
-  return client
+client_id = os.environ['FITBIT_CLIENT_ID']
+client_secret = os.environ['FITBIT_CLIENT_SECRET']
+access_token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0RDYyU1AiLCJhdWQiOiIyMjg3NFEiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdzZXQgd2FjdCB3bG9jIiwiZXhwIjoxNTE0ODc2ODkyLCJpYXQiOjE0ODMzNDA4OTJ9.MfyOC9u8RiHNQP5npfwp6GktfRMeQcUzBdoIs7ixjv0"
+
+client = fitbit.Fitbit(client_id, client_secret, access_token=access_token)
+
+res = client.time_series('activities/distance', period='7d')
+
+print(res)
 #+end_src
 
 #+RESULTS:
-: <fitbit.api.FitbitOauth2Client object at 0x000001535DE59C50>
-
+: {'activities-distance': [{'dateTime': '2017-01-15', 'value': '1.3654010573008'}, {'dateTime': '2017-01-16', 'value': '2.95056867778816'}, {'dateTime': '2017-01-17', 'value': '2.65240371130696'}, {'dateTime': '2017-01-18', 'value': '3.27022687380064'}, {'dateTime': '2017-01-19', 'value': '2.8367459028376'}, {'dateTime': '2017-01-20', 'value': '1.6298566366159999'}, {'dateTime': '2017-01-21', 'value': '0.73961191612568'}]}
