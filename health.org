@@ -1,8 +1,4 @@
 * Notes
-https://dev.fitbit.com/docs/basics/
-https://dev.fitbit.com/apps/new
-https://github.com/orcasgit/python-fitbit
-http://python-fitbit.readthedocs.io/en/latest/
 * Features
 ** Visualization
 1. Running
@@ -18,12 +14,9 @@ http://python-fitbit.readthedocs.io/en/latest/
 ** Interaction
 
 * Code
-#+begin_src python
-import os
-
-import fitbit
-
-
+** Models
+#+NAME: fitbit-models
+#+begin_src python :tangle models.py
 class Subject(object):
     pass
 
@@ -35,7 +28,6 @@ class Goal(Subject):
 class Series(Subject):
     pass
 
-###
 
 class Exercise(object):
     pass
@@ -43,9 +35,10 @@ class Exercise(object):
 
 class Run(Exercise):
     pass
-
-###
-
+#+end_src
+** Client
+#+NAME: fitbit-client-utils
+#+begin_src python :tangle client.py
 def request(subject, activity):
     if subject == 'goal':
         pass
@@ -59,6 +52,15 @@ def request(subject, activity):
             return func(*args, **kwargs)
         return _wrap
     return wrap
+#+end_src
+
+#+NAME: fitbit-client
+#+begin_src python :tangle client.py
+import os
+
+import fitbit
+
+import models
 
 
 class MyFitbit(fitbit.Fitbit):
@@ -67,19 +69,19 @@ class MyFitbit(fitbit.Fitbit):
                          os.environ['FITBIT_CLIENT_SECRET'],
                          os.environ['FITBIT_ACCESS_TOKEN'])
 
-    @request(Series, Run)
+    @request(models.Series, models.Run)
     def runs(self, period):
         self.time_series('activities/distance', period=period)
 #+end_src
-
-
+** Interact
+#+NAME: fitbit-interact
 #+begin_src python :results output
+from client import MyFitbit
+
+
 client = MyFitbit()
 
 res = client.time_series('activities/distance', period='7d')
 
 print(res)
 #+end_src
-
-#+RESULTS:
-: {'activities-distance': [{'dateTime': '2017-01-15', 'value': '1.3654010573008'}, {'dateTime': '2017-01-16', 'value': '2.95056867778816'}, {'dateTime': '2017-01-17', 'value': '2.65240371130696'}, {'dateTime': '2017-01-18', 'value': '3.27022687380064'}, {'dateTime': '2017-01-19', 'value': '2.8367459028376'}, {'dateTime': '2017-01-20', 'value': '1.6298566366159999'}, {'dateTime': '2017-01-21', 'value': '5.18485171399832'}]}
