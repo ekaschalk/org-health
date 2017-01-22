@@ -11,16 +11,25 @@
 (setq org-global-properties
       '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
         ("INTENSITY_ALL" . "easy normal hard")
-        ("PLAN_ALL" . "file:c:/Dev/health/health.org")))
+        ("PLAN_ALL" . "file:c:/Dev/health/health.org")
+        ("RUN_ROUTE_ALL" . "kanan lindero trails")
+))
 
 (setq ek/cardio-templates
-      (let* ((base "* DONE %? %^T %s %s")
-             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p")
+      (let* ((workouts "c:/Dev/health/workouts.org")
+             (hl "Test")
+
+             (base "* DONE Run %^T")
              (tags ":fitness:cardio:run:")
-             (full (s-join " " `(,base ,props ,tags))))
-        `(("r" "Run" entry (file+headline "c:/Dev/health/workouts.org" "Test") ,full))))
+             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p %^{RUN_ROUTE}p")
+             (end "\n%i%?")
+
+             (full (s-join " " `(,base ,tags ,props ,end))))
+        `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
 
 (setq org-capture-templates ek/cardio-templates)
+
+; need to create special org-capture for drawing from fitbit
 
 ;; ARGS
 ; keys description type target template properties 

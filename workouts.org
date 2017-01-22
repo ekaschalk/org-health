@@ -1,8 +1,9 @@
 * Test
-** DONE  <2017-01-22 Sun>                              :fitness:cardio:run:
+** DONE Run <2017-01-22 Sun>                             :fitness:cardio:run:     
    :PROPERTIES:
    :DURATION: 5
    :INTENSITY: easy
    :PLAN:     file:c:/Dev/health/health.org
+   :RUN_ROUTE: kanan
    :END:
-
+Here are some notes about the run 
