@@ -1,2 +1,3 @@
 health.html
 *.py
+*__pycache__

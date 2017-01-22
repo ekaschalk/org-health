@@ -1,6 +1,8 @@
-* Notes
+* Tasks
 * Features
-** Visualization
+Fitbit is used for tracking and integration of runs/food/sleep/heartbeat/alarms.
+Want much more functionality -> all needs to be local.
+** Core
 1. Running
    1. Configure
       1. Time range
@@ -8,52 +10,99 @@
    1. Configure
       1. Time range
       2. Workout type (Tags are pull, push, legs, run, mobility, skill)
+3. TODOS
+   1. Transform todo to an alarm
+4. Goals
+   1. Want more advanced and specific goals system.
+** Implementation
+1. Get and store data
+2. Update data
+   1. Automatic done through subscriptions - https://dev.fitbit.com/docs/subscriptions/
+   2. general - regardless if subscription, update only as specified
 
-** Storage
+* API
+** Alarms
+add_alarm(device_id, alarm_time, week_days, recurring=False, enabled=True, label=None, snooze_length=None, snooze_count=None, vibe='DEFAULT')
+delete_alarm(device_id, alarm_id)
+update_alarm(device_id, alarm_id, alarm_time, week_days, recurring=False, enabled=True, label=None, snooze_length=None, snooze_count=None, vibe='DEFAULT')
+** Activities
+# No args -> gets, Args -> sets
+activities_daily_goal(calories_out=None, active_minutes=None, floors=None, distance=None, steps=None)
+activities_weekly_goal(distance=None, floors=None, steps=None)
 
-** Interaction
+# Time series (1min or 15min)
+intraday_time_series(resource, base_date='today', detail_level='1min', start_time=None, end_time=None)
+time_series(resource, user_id=None, base_date='today', period=None, end_date=None)
+
+# GPS data can be retrieved using:
+https://dev.fitbit.com/docs/activity/#get-activity-tcx
+** Logging
+# log - https://dev.fitbit.com/docs/activity/#log-activity
+activities_list()  # all activities in tree structure
+log_activity(data)
+log_sleep(start_time, duration)
+data = {
+    "activityLog":{
+        "activityId":12030,
+        "activityParentId":90009,
+        "calories":197,
+        "description":"5 mph (12 min/mile)",
+        "distance":3.34,  # only when relevant
+        "duration":1800000,
+        "isFavorite":false,
+        "logId":132394,
+        "name":"Running",
+        "startTime":"12:20",
+        "steps":2970  # walking or running only
+    }
+}
+** Resources
+activities/calories  
+activities/caloriesBMR  
+activities/steps  
+activities/distance  
+activities/floors  
+activities/elevation  
+activities/minutesSedentary  
+activities/minutesLightlyActive  
+activities/minutesFairlyActive  
+activities/minutesVeryActive  
+activities/activityCalories
+"bmi", "fat", or "weight"  # body series
+"heart"  # heart series
+sleep/startTime  
+sleep/timeInBed  
+sleep/minutesAsleep  
+sleep/awakeningsCount  
+sleep/minutesAwake  
+sleep/minutesToFallAsleep  
+sleep/minutesAfterWakeup  
+sleep/efficiency
 
 * Code
 ** Models
 #+NAME: fitbit-models
 #+begin_src python :tangle models.py
+class Task(object):
+    types = ['life', 'work', 'goal', 'fitness', 'habit']
+
+    def __init__(self, task):
+        self.task = task  # task is a parsed todo
+
 class Subject(object):
     pass
 
-
 class Goal(Subject):
-    pass
-
+    types = ['life', 'work', 'fitness']
 
 class Series(Subject):
     pass
 
-
 class Exercise(object):
-    pass
+    types = ['run', 'mobility', 'pull', 'push', 'legs', 'skill', 'hike']
 
-
-class Run(Exercise):
-    pass
 #+end_src
 ** Client
-#+NAME: fitbit-client-utils
-#+begin_src python :tangle client.py
-def request(subject, activity):
-    if subject == 'goal':
-        pass
-
-    def wrap(func):
-        if activity == 'run':
-            pass  # where to store
-
-        def _wrap(*args, **kwargs):
-            # transform to dataframe/org-table
-            return func(*args, **kwargs)
-        return _wrap
-    return wrap
-#+end_src
-
 #+NAME: fitbit-client
 #+begin_src python :tangle client.py
 import os
@@ -63,11 +112,30 @@ import fitbit
 import models
 
 
+def request(subject, activity):
+    if subject == 'goal':
+        pass
+
+    def wrap(func):
+        if activity == 'run':
+            pass  # where to store
+
+        def _wrap(*args, **kwargs):
+            try:
+                # transform to dataframe/org-table
+                return func(*args, **kwargs)
+            except:  # 429 -> rate limit, 150 per hour
+                pass
+
+        return _wrap
+    return wrap
+
+
 class MyFitbit(fitbit.Fitbit):
     def __init__(self):
         super().__init__(os.environ['FITBIT_CLIENT_ID'],
                          os.environ['FITBIT_CLIENT_SECRET'],
-                         os.environ['FITBIT_ACCESS_TOKEN'])
+                         access_token=os.environ['FITBIT_ACCESS_TOKEN'])
 
     @request(models.Series, models.Run)
     def runs(self, period):
