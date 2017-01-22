@@ -1,24 +1,18 @@
-* Tasks
 * Features
-Fitbit is used for tracking and integration of runs/food/sleep/heartbeat/alarms.
-Want much more functionality -> all needs to be local.
-** Core
-1. Running
-   1. Configure
-      1. Time range
-2. Workouts
-   1. Configure
-      1. Time range
-      2. Workout type (Tags are pull, push, legs, run, mobility, skill)
-3. TODOS
-   1. Transform todo to an alarm
-4. Goals
-   1. Want more advanced and specific goals system.
-** Implementation
-1. Get and store data
-2. Update data
-   1. Automatic done through subscriptions - https://dev.fitbit.com/docs/subscriptions/
-   2. general - regardless if subscription, update only as specified
+** Fitbit
+- task
+  - org task -> add_alarm || update_alarm
+  - delete task || manual -> delete_alarm
+- workout
+  - org capture workout -> log_activity
+  - fitbit workout -> clean -> (add detail) -> org workout
+  - capture
+    - tags: ['mobility', 'pull', 'push', 'legs', 'skill', 'hike']
+    - data: ['workout-link']
+  - fitbit
+    - tags: ['run', 'yoga', 'weights', 'treadmill']
+    - data: ['distance', 'workout-link', 'avg-mph', 'time']
+
 
 * API
 ** Alarms
@@ -56,29 +50,6 @@ data = {
         "steps":2970  # walking or running only
     }
 }
-** Resources
-activities/calories  
-activities/caloriesBMR  
-activities/steps  
-activities/distance  
-activities/floors  
-activities/elevation  
-activities/minutesSedentary  
-activities/minutesLightlyActive  
-activities/minutesFairlyActive  
-activities/minutesVeryActive  
-activities/activityCalories
-"bmi", "fat", or "weight"  # body series
-"heart"  # heart series
-sleep/startTime  
-sleep/timeInBed  
-sleep/minutesAsleep  
-sleep/awakeningsCount  
-sleep/minutesAwake  
-sleep/minutesToFallAsleep  
-sleep/minutesAfterWakeup  
-sleep/efficiency
-
 * Code
 ** Models
 #+NAME: fitbit-models
@@ -97,6 +68,27 @@ class Goal(Subject):
 
 class Series(Subject):
     pass
+
+
+class Activity(object):
+    pass
+
+
+class FitbitResource(object):
+    activities = [
+        'steps', 'distance', 'floors', 'elevation',
+        'calories', 'caloriesBMR', 'activityCalories',
+        'minutesSedentary', 'minutesLightlyActive',
+        'minutesFairlyActive', 'minutesVeryActive',
+    ]
+    sleep = [
+        'startTime', 'timeInBed', 'efficiency', 'awakeningsCount',
+        'minutesAwake','minutesAsleep',
+        'minutesToFallAsleep', 'minutesAfterWakeup',
+    ]
+    body = ['bmi', 'fat', 'weight']
+    heart = ['heart']
+
 
 class Exercise(object):
     types = ['run', 'mobility', 'pull', 'push', 'legs', 'skill', 'hike']
@@ -137,19 +129,43 @@ class MyFitbit(fitbit.Fitbit):
                          os.environ['FITBIT_CLIENT_SECRET'],
                          access_token=os.environ['FITBIT_ACCESS_TOKEN'])
 
-    @request(models.Series, models.Run)
+    # @request(models.Series, models.Run)
     def runs(self, period):
         self.time_series('activities/distance', period=period)
 #+end_src
 ** Interact
-#+NAME: fitbit-interact
+#+NAME: fitbit-request
 #+begin_src python :results output
 from client import MyFitbit
 
 
 client = MyFitbit()
 
-res = client.time_series('activities/distance', period='7d')
+# res = client.time_series('activities/distance', period='7d')
+res = client.activities_list()
 
 print(res)
+#+end_src
+
+#+NAME: fitbit-interact
+#+begin_src python :results output :var res=fitbit-request
+import pandas as pd
+
+
+df = eval(res)
+
+df = pd.DataFrame(df['categories'])
+
+# print(df)
+
+# print(df['activities'][11])
+# print(df['subCategories'][11])
+df = df['subCategories'][11]
+
+print([y['name'] for x in df for y in x['activities']])
+
+'Stretching'
+'Weights'
+'Run'
+'Treadmill'
 #+end_src
