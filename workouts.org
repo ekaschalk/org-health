@@ -1,0 +1,8 @@
+* Test
+** DONE  <2017-01-22 Sun>                              :fitness:cardio:run:
+   :PROPERTIES:
+   :DURATION: 5
+   :INTENSITY: easy
+   :PLAN:     file:c:/Dev/health/health.org
+   :END:
+

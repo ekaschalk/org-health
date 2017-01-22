@@ -1,3 +1,43 @@
+* Lisp
+#+begin_src emacs-lisp :results silent
+;; (setq org-todo-keywords
+;;       (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+;;               (sequence "WAITING(w@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
+;; (setq org-capture-templates
+;;         ("c" "Cardio")  ; run, hike, walk
+;;         ("m" "Mobility")  ; warmup, yoga, dynamic
+;;         ("w" "Workout")  ; skill, push, pull, leg
+
+(setq org-global-properties
+      '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
+        ("INTENSITY_ALL" . "easy normal hard")
+        ("PLAN_ALL" . "file:c:/Dev/health/health.org")))
+
+(setq ek/cardio-templates
+      (let* ((base "* DONE %? %^T %s %s")
+             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p")
+             (tags ":fitness:cardio:run:")
+             (full (s-join " " `(,base ,props ,tags))))
+        `(("r" "Run" entry (file+headline "c:/Dev/health/workouts.org" "Test") ,full))))
+
+(setq org-capture-templates ek/cardio-templates)
+
+;; ARGS
+; keys description type target template properties 
+; target -> (file+headline) (function function-that-moves-to-point)
+;; TEMPLATES
+; %(sexp)
+; %<...> -> result of format-time-string, %t -> timestamp data, %T -> timestamp time too
+; %i -> initial content indented
+; %a annotation, %A prompt annotation
+; %^g prompt for tags
+; %^t prompt for date
+; %^L prompt for link
+; %^{prop}p prompt for property
+; %\1 ... %\N Insert the text entered at the Nth %^{prompt}, where N is a number, starting from 1.
+; %? After completing the template, position cursor here.
+#+end_src
+
 * Features
 ** Fitbit
 - task
@@ -13,6 +53,102 @@
     - tags: ['run', 'yoga', 'weights', 'treadmill']
     - data: ['distance', 'workout-link', 'avg-mph', 'time']
 
+just need base http blocks and can rerun with different arguments as required      
+
+#+begin_src http :pretty
+GET https://api.fitbit.com/1/user/-/activities/date/2017-01-01.json
+Accept-Language: en_US
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0RDYyU1AiLCJhdWQiOiIyMjg3NFEiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdzZXQgd2FjdCB3bG9jIiwiZXhwIjoxNTE0ODc2ODkyLCJpYXQiOjE0ODMzNDA4OTJ9.MfyOC9u8RiHNQP5npfwp6GktfRMeQcUzBdoIs7ixjv0
+#+end_src      
+
+#+RESULTS:
+#+begin_example
+{
+  "summary": {
+    "veryActiveMinutes": 95,
+    "steps": 16361,
+    "sedentaryMinutes": 1206,
+    "restingHeartRate": 69,
+    "marginalCalories": 1353,
+    "lightlyActiveMinutes": 97,
+    "heartRateZones": [
+      {
+        "name": "Out of Range",
+        "minutes": 633,
+        "min": 30,
+        "max": 98,
+        "caloriesOut": 1087.38792
+      },
+      {
+        "name": "Fat Burn",
+        "minutes": 159,
+        "min": 98,
+        "max": 137,
+        "caloriesOut": 1098.87822
+      },
+      {
+        "name": "Cardio",
+        "minutes": 41,
+        "min": 137,
+        "max": 167,
+        "caloriesOut": 546.26238
+      },
+      {
+        "name": "Peak",
+        "minutes": 3,
+        "min": 167,
+        "max": 220,
+        "caloriesOut": 28.3878
+      }
+    ],
+    "floors": 51,
+    "fairlyActiveMinutes": 42,
+    "elevation": 510,
+    "distances": [
+      {
+        "distance": 9.27,
+        "activity": "total"
+      },
+      {
+        "distance": 9.27,
+        "activity": "tracker"
+      },
+      {
+        "distance": 0,
+        "activity": "loggedActivities"
+      },
+      {
+        "distance": 6.93,
+        "activity": "veryActive"
+      },
+      {
+        "distance": 0.9,
+        "activity": "moderatelyActive"
+      },
+      {
+        "distance": 1.31,
+        "activity": "lightlyActive"
+      },
+      {
+        "distance": 0.12,
+        "activity": "sedentaryActive"
+      }
+    ],
+    "caloriesOut": 3611,
+    "caloriesBMR": 1946,
+    "activityCalories": 1864,
+    "activeScore": -1
+  },
+  "goals": {
+    "steps": 10000,
+    "floors": 10,
+    "distance": 5,
+    "caloriesOut": 3132,
+    "activeMinutes": 30
+  },
+  "activities": []
+}
+#+end_example
 
 * API
 ** Alarms
