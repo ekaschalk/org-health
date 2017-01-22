@@ -4,7 +4,7 @@
 ;;       (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
 ;;               (sequence "WAITING(w@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 ;; (setq org-capture-templates
-;;         ("c" "Cardio")  ; run, hike, walk
+;;         ("c" "Cardio")  ; run, hike, walk, track
 ;;         ("m" "Mobility")  ; warmup, yoga, dynamic
 ;;         ("w" "Workout")  ; skill, push, pull, leg
 
@@ -12,14 +12,21 @@
       '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
         ("INTENSITY_ALL" . "easy normal hard")
         ("PLAN_ALL" . "file:c:/Dev/health/health.org")
+
         ("RUN_ROUTE_ALL" . "kanan lindero trails")
+        ("HIKE_ROUTE_ALL" . "china-flats home-trail")
+
+        ("SKILL_ALL" . "handstands lsit support-hold")
+        ("PUSH_ALL" . "")
 ))
+
+; Want -> variable prompt exercies -> variable prompt set(s) -> reps
 
 (setq ek/cardio-templates
       (let* ((workouts "c:/Dev/health/workouts.org")
              (hl "Test")
 
-             (base "* DONE Run %^T")
+             (base "* DONE Run => %(ek/helm) %^T")
              (tags ":fitness:cardio:run:")
              (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p %^{RUN_ROUTE}p")
              (end "\n%i%?")
@@ -28,6 +35,14 @@
         `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
 
 (setq org-capture-templates ek/cardio-templates)
+
+; https://github.com/emacs-helm/helm/wiki/Developing
+(defun ek/helm ()
+  (interactive)
+  (helm :sources (helm-build-sync-source "test"
+                   :candidates '(bench pullups rows dips)
+                   :fuzzy-match t)
+        :buffer "*helm test*"))
 
 ; need to create special org-capture for drawing from fitbit
 
