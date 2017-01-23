@@ -33,29 +33,44 @@
 (setq org-capture-templates ek/cardio-templates)
 
 ; https://github.com/emacs-helm/helm/wiki/Developing
-; todo Trim possible exercises on further calls
-; todo Include weights
-(defun ek/read-sets (&optional sets)
-  (let ((rep (read-string "Reps: ")))
+; todo Trim possible exercises on further calls 
+; todo Weights vs Hold-time
+; todo format string
+; (weight only if needed, time only if needed)
+; (weight = 0 -> no weight returned)
+; repsxweight, timexnothing
+(defun ek/read-sets (timed &optional sets)
+  (let ((rep (read-string (if timed "Time: " "Reps: "))))
     (if (string= "" rep)
         sets
-      (let ((weight (read-string "Weight: ")))
-        (ek/read-sets
-         (push (list rep weight)
-               sets))))))
+      (if timed
+          (ek/read-sets timed
+                        (push rep sets))
+        (let ((weight (read-string "Weight: ")))
+          (ek/read-sets timed
+                        (push (list rep weight)
+                              sets)))))))
 
 (defun ek/helm (&optional workouts)
-  (let* ((exercise
+  (let* ((pull '(- nil
+                   pullups nil
+                   scapular-retractions t
+                   german-hang t))
+         (push '(- bench ohp dips pushups))
+         (legs '(- squat deadlift))
+         (skills '(- handstand lsit))
+         (warmup '(- plank bridge side-plank superman))
+         (exercise
           (helm :sources (helm-build-sync-source "Workout"
-                           :candidates '(done bench pullups rows dips)
+                           :candidates (lambda () (-slice pull 0 -1 2))
                            :fuzzy-match t)
-                :buffer "*helm test*")))
-
-    (if (string= "done" exercise)
+                :buffer "*helm workout*")))
+    (if (string= "-" exercise)
         workouts
       (ek/helm
-       (push (list exercise (ek/read-sets))
-             workouts)))))
+       (append (list exercise
+                     (ek/read-sets (plist-get pull (read exercise))))
+               workouts)))))
 #+end_src
 
 * Features
