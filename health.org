@@ -1,8 +1,5 @@
 * Lisp
 #+begin_src emacs-lisp :results silent
-;; (setq org-todo-keywords
-;;       (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-;;               (sequence "WAITING(w@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 ;; (setq org-capture-templates
 ;;         ("c" "Cardio")  ; run, hike, walk, track
 ;;         ("m" "Mobility")  ; warmup, yoga, dynamic
@@ -20,8 +17,7 @@
         ("PUSH_ALL" . "")
 ))
 
-; Want -> variable prompt exercies -> variable prompt set(s) -> reps
-
+; http://orgmode.org/manual/Template-expansion.html#Template-expansion
 (setq ek/cardio-templates
       (let* ((workouts "c:/Dev/health/workouts.org")
              (hl "Test")
@@ -37,29 +33,26 @@
 (setq org-capture-templates ek/cardio-templates)
 
 ; https://github.com/emacs-helm/helm/wiki/Developing
-(defun ek/helm ()
+; Want -> variable prompt exercies -> variable prompt set(s) -> reps
+; Trim possibilities on further calls
+; maybe if I'm done adding exercices -> return "" -> terminate
+(defun ek/helm (&optional workouts)
   (interactive)
-  (helm :sources (helm-build-sync-source "test"
-                   :candidates '(bench pullups rows dips)
-                   :fuzzy-match t)
-        :buffer "*helm test*"))
+  (let* ((selected
+          (helm :sources (helm-build-sync-source "Workout"
+                           :candidates '(done bench pullups rows dips)
+                           :fuzzy-match t)
+                :buffer "*helm test*")))
 
-; need to create special org-capture for drawing from fitbit
-
-;; ARGS
-; keys description type target template properties 
-; target -> (file+headline) (function function-that-moves-to-point)
-;; TEMPLATES
-; %(sexp)
-; %<...> -> result of format-time-string, %t -> timestamp data, %T -> timestamp time too
-; %i -> initial content indented
-; %a annotation, %A prompt annotation
-; %^g prompt for tags
-; %^t prompt for date
-; %^L prompt for link
-; %^{prop}p prompt for property
-; %\1 ... %\N Insert the text entered at the Nth %^{prompt}, where N is a number, starting from 1.
-; %? After completing the template, position cursor here.
+    (if (string= "done" selected)
+        (s-join " " workouts)
+      (ek/helm
+       (append workouts
+               (list selected
+                     (helm :sources (helm-build-sync-source "Sets"
+                                      :candidates '("1" "2" "3x5" "4" "5")
+                                      :fuzzy-match t)
+                           :buffer "*helm test*")))))))
 #+end_src
 
 * Features
