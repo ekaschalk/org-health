@@ -33,26 +33,29 @@
 (setq org-capture-templates ek/cardio-templates)
 
 ; https://github.com/emacs-helm/helm/wiki/Developing
-; Want -> variable prompt exercies -> variable prompt set(s) -> reps
-; Trim possibilities on further calls
-; maybe if I'm done adding exercices -> return "" -> terminate
+; todo Trim possible exercises on further calls
+; todo Include weights
+(defun ek/read-sets (&optional sets)
+  (let ((rep (read-string "Reps: ")))
+    (if (string= "" rep)
+        sets
+      (let ((weight (read-string "Weight: ")))
+        (ek/read-sets
+         (push (list rep weight)
+               sets))))))
+
 (defun ek/helm (&optional workouts)
-  (interactive)
-  (let* ((selected
+  (let* ((exercise
           (helm :sources (helm-build-sync-source "Workout"
                            :candidates '(done bench pullups rows dips)
                            :fuzzy-match t)
                 :buffer "*helm test*")))
 
-    (if (string= "done" selected)
-        (s-join " " workouts)
+    (if (string= "done" exercise)
+        workouts
       (ek/helm
-       (append workouts
-               (list selected
-                     (helm :sources (helm-build-sync-source "Sets"
-                                      :candidates '("1" "2" "3x5" "4" "5")
-                                      :fuzzy-match t)
-                           :buffer "*helm test*")))))))
+       (push (list exercise (ek/read-sets))
+             workouts)))))
 #+end_src
 
 * Features
