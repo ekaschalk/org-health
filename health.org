@@ -273,6 +273,41 @@ print([y['name'] for x in df for y in x['activities']])
 1. [[http://orgmode.org/manual/Template-expansion.html]]
 2. [[https://github.com/emacs-helm/helm/wiki/Developing]]
 * Lisp
+** old-core
+#+begin_src emacs-lisp
+(defun ek/read-sets (timed &optional sets)
+  (let ((rep (read-string (if timed "Time: " "Reps: "))))
+    (if (string= "" rep)
+        sets
+      (if timed
+          (ek/read-sets timed
+                        (push rep sets))
+        (let ((weight (read-string "Weight: ")))
+          (ek/read-sets timed
+                        (push (list rep weight)
+                              sets)))))))
+
+(defun ek/helm (&optional workouts)
+  (let* ((pull '(- nil
+                   pullups nil
+                   scapular-retractions t
+                   german-hang t))
+         (push '(- bench ohp dips pushups))
+         (legs '(- squat deadlift))
+         (skills '(- handstand lsit))
+         (warmup '(- plank bridge side-plank superman))
+         (exercise
+          (helm :sources (helm-build-sync-source "Workout"
+                           :candidates (lambda () (-slice pull 0 -1 2))
+                           :fuzzy-match t)
+                :buffer "*helm workout*")))
+    (if (string= "-" exercise)
+        workouts
+      (ek/helm
+       (append (list exercise
+                     (ek/read-sets (plist-get pull (read exercise))))
+               workouts)))))
+#+end_src
 ** Other
 #+NAME: scratch
 #+begin_src emacs-lisp
@@ -343,7 +378,7 @@ print([y['name'] for x in df for y in x['activities']])
 |      | push/pull/legs/core | yes/no | yes/no   |
 |------+---------------------+--------+----------|
 |    3 | 4                   | 5      | 1        |
-*** Built
+*** Building
 #+NAME: tab-workout
 #+RESULTS: tab-workout-update
 | Name    | Type                | Timed  | Weighted |
@@ -359,69 +394,57 @@ print([y['name'] for x in df for y in x['activities']])
 |         | push/pull/legs/core | yes/no | yes/no   |
 |---------+---------------------+--------+----------|
 | pullups | pull                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
 
 ** Current
-#+NAME: tab-exercises-update
+#+NAME: tab-exercises-updat
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
 (cl-defun health--read (HEADER OPTIONS &optional (FORMAT-FUNC #'-list))
-  """HEADER prompts list of strings from FORMAT-FUNC applied to OPTIONS"""
-  (if (string= "" OPTIONS)
+  """HEADER prompts resulting list of strings from FORMAT-FUNC applied to OPTIONS"""
+  (if (or (not OPTIONS) (eq "" OPTIONS))
       (read-string (concat HEADER ": "))
     (helm :sources (helm-build-sync-source HEADER
                      :candidates (lambda () (funcall FORMAT-FUNC OPTIONS))
                      :fuzzy-match t))))
 
+(defun health--table-headers (TABLE) (nth 0 TABLE))
+(defun health--table-options (TABLE) (nth 1 TABLE))
+(defun health--table-values (TABLE) (-slice TABLE (+ 1 (-elem-index 'hline TABLE))))
+(defun health--table-options-format () (-partial #'s-split "/"))
+
 (defun health--prompt-add (TABLE)
   """Prompts a row for TABLE"""
-  (let ((headers (nth 0 TABLE))
-        (options (nth 1 TABLE))
-        (format-func (apply-partially #'s-split "/")))
-    (--zip-with (health--read it other format-func) headers options)))
+  (--zip-with (health--read it other (health--table-options-format))
+              (health--table-headers TABLE)
+              (health--table-options TABLE)))
 
 (defun health--add-to-table (TABLE)
   """Prompts and appends row to TABLE"""
-  (append tab (list (health--prompt-add TABLE))))
+  (append TABLE (list (health--prompt-add TABLE))))
 
-(health--add-to-table exercises)
+(defun health--prompt-table ()
+  """Collects and prompts a table name"""
+  (health--read "Table"
+                (org-element-map (org-element-parse-buffer 'element) 'table
+                  (-partial #'org-element-property :name))))
+
+(defun health--narrow-table (TABLE)
+  """Filters TABLE on prompted column"""
+  (let* ((headers (health--table-headers TABLE))
+         (column (-elem-index
+                  (health--read "Filter" headers) headers))
+         (options (-distinct
+                   (-select-column column
+                                   (health--table-values TABLE)))))
+    (health--read "By value" options)))
+
+; (health--add-to-table exercises)
+; (health--collect-tables)
+; (health--prompt-table)
+(health--narrow-table exercises)
 #+end_src
 
-# #+NAME: add-to-tab
-# #+begin_src emacs-lisp :var tab=tab-exercises :colnames no :hlines yes
-# (health--add-to-table tab)
-# #+end_src
+#+RESULTS: tab-exercises-updat
+: yes
 
-** Core
-#+begin_src emacs-lisp
-(defun ek/read-sets (timed &optional sets)
-  (let ((rep (read-string (if timed "Time: " "Reps: "))))
-    (if (string= "" rep)
-        sets
-      (if timed
-          (ek/read-sets timed
-                        (push rep sets))
-        (let ((weight (read-string "Weight: ")))
-          (ek/read-sets timed
-                        (push (list rep weight)
-                              sets)))))))
-
-(defun ek/helm (&optional workouts)
-  (let* ((pull '(- nil
-                   pullups nil
-                   scapular-retractions t
-                   german-hang t))
-         (push '(- bench ohp dips pushups))
-         (legs '(- squat deadlift))
-         (skills '(- handstand lsit))
-         (warmup '(- plank bridge side-plank superman))
-         (exercise
-          (helm :sources (helm-build-sync-source "Workout"
-                           :candidates (lambda () (-slice pull 0 -1 2))
-                           :fuzzy-match t)
-                :buffer "*helm workout*")))
-    (if (string= "-" exercise)
-        workouts
-      (ek/helm
-       (append (list exercise
-                     (ek/read-sets (plist-get pull (read exercise))))
-               workouts)))))
-#+end_src
