@@ -273,6 +273,7 @@ print([y['name'] for x in df for y in x['activities']])
 1. [[http://orgmode.org/manual/Template-expansion.html]]
 2. [[https://github.com/emacs-helm/helm/wiki/Developing]]
 * Lisp
+** Other
 #+NAME: scratch
 #+begin_src emacs-lisp
 ;; (setq org-capture-templates
@@ -312,8 +313,42 @@ print([y['name'] for x in df for y in x['activities']])
 
 (setq org-capture-templates ek/cardio-templates)
 #+end_src
+** Tables
+#+NAME: tab-exercises
+| Name | Timed | Weighted |
+|      | y/n   | y/n      |
+|------+-------+----------|
+| a    | b     | c        |
+| b    | c     | d        |
 
-#+NAME: core
+** Current
+#+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :results verbatim
+(defun health--table-headers (tab)
+  (--map (concat ":" it)
+         (-first-item tab)))
+
+(defun health--table-headers-format (tab)
+  (-zip-with #'concat
+   (-first-item tab)
+   (--map (if (string= "" it)
+              ": "
+            (format " [%s]: " it))
+         (nth 1 tab))))
+
+(defun health--table-to-plist (tab)
+  (--map (-interleave (health--table-headers tab) it)
+         (-slice tab 2)))
+
+(defun health--add-to-table (tab)
+  (-map #'read-string
+        (health--table-headers-format tab)))
+
+; (health--table-to-plist exercises)
+; (health--add-to-table exercises)
+; (health--table-headers-format exercises)
+; (health--table-headers exercises)
+#+end_src
+** Core
 #+begin_src emacs-lisp
 (defun ek/read-sets (timed &optional sets)
   (let ((rep (read-string (if timed "Time: " "Reps: "))))
@@ -347,5 +382,4 @@ print([y['name'] for x in df for y in x['activities']])
        (append (list exercise
                      (ek/read-sets (plist-get pull (read exercise))))
                workouts)))))
-
 #+end_src
