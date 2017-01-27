@@ -280,6 +280,23 @@ print([y['name'] for x in df for y in x['activities']])
 ;;         ("c" "Cardio")  ; run, hike, walk, track
 ;;         ("m" "Mobility")  ; warmup, yoga, dynamic
 ;;         ("w" "Workout")  ; skill, push, pull, leg
+
+(;; defun health--table-headers (tab)
+ ;;  (--map (concat ":" it)
+ ;;         (-first-item tab)))
+
+(;; defun health--table-headers-format (tab)
+ ;;  (-zip-with #'concat
+ ;;   (-first-item tab)
+ ;;   (--map (if (string= "" it)
+ ;;              ": "
+ ;;            (format "[%s]: " it))
+ ;;         (nth 1 tab))))
+
+;; (defun health--table-to-plist (tab)
+;;  (--map (-interleave (health--table-headers tab) it)
+;;         (-slice tab 2)))
+
 #+end_src
 
 #+NAME: configure
@@ -314,40 +331,38 @@ print([y['name'] for x in df for y in x['activities']])
 (setq org-capture-templates ek/cardio-templates)
 #+end_src
 ** Tables
+*** Copies
+| Name | Type                | Timed  | Weighted |
+|      | push/pull/legs/core | yes/no | yes/no   |
+|------+---------------------+--------+----------|
+|    3 | 4                   | 5      | 1        |
+
+*** Built
 #+NAME: tab-exercises
-| Name | Timed | Weighted |
-|      | y/n   | y/n      |
-|------+-------+----------|
-| a    | b     | c        |
-| b    | c     | d        |
+#+RESULTS: tab-exercises-update
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
 
 ** Current
-#+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :results verbatim
-(defun health--table-headers (tab)
-  (--map (concat ":" it)
-         (-first-item tab)))
-
-(defun health--table-headers-format (tab)
-  (-zip-with #'concat
-   (-first-item tab)
-   (--map (if (string= "" it)
-              ": "
-            (format " [%s]: " it))
-         (nth 1 tab))))
-
-(defun health--table-to-plist (tab)
-  (--map (-interleave (health--table-headers tab) it)
-         (-slice tab 2)))
+#+NAME: tab-exercises-update
+#+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
+(defun health--options (tab)
+  (-zip-with (lambda (header options) 
+               (if (string= "" options)
+                   (read-string (concat header ": "))
+                 (helm :sources (helm-build-sync-source header
+                                  :candidates (lambda () (s-split "/" options))
+                                  :fuzzy-match t))))
+             (-first-item tab) (nth 1 tab)))
 
 (defun health--add-to-table (tab)
-  (-map #'read-string
-        (health--table-headers-format tab)))
+  (append tab (list (health--options tab))))
 
-; (health--table-to-plist exercises)
-; (health--add-to-table exercises)
-; (health--table-headers-format exercises)
-; (health--table-headers exercises)
+(health--add-to-table exercises)
 #+end_src
+
 ** Core
 #+begin_src emacs-lisp
 (defun ek/read-sets (timed &optional sets)
