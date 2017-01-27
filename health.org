@@ -338,6 +338,14 @@ print([y['name'] for x in df for y in x['activities']])
 |    3 | 4                   | 5      | 1        |
 
 *** Built
+#+NAME: tab-workout
+#+RESULTS: tab-workout-update
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
+| hi      | push                | no     | yes      |
+
 #+NAME: tab-exercises
 #+RESULTS: tab-exercises-update
 | Name    | Type                | Timed  | Weighted |
@@ -346,19 +354,21 @@ print([y['name'] for x in df for y in x['activities']])
 | pullups | pull                | yes    | yes      |
 
 ** Current
-#+NAME: tab-exercises-update
+#+NAME: tab-workout-update
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
-(defun health--options (tab)
-  (-zip-with (lambda (header options) 
-               (if (string= "" options)
-                   (read-string (concat header ": "))
-                 (helm :sources (helm-build-sync-source header
-                                  :candidates (lambda () (s-split "/" options))
-                                  :fuzzy-match t))))
-             (-first-item tab) (nth 1 tab)))
+(cl-defun health--read (header options &optional (options-format-function #'-list))
+  (if (string= "" options)
+      (read-string (concat header ": "))
+    (helm :sources (helm-build-sync-source header
+                     :candidates (lambda () (funcall options-format-function options))
+                     :fuzzy-match t))))
+
+(defun health--prompt-add (tab)
+  (--zip-with (health--read it other (apply-partially #'s-split "/"))
+             (nth 0 tab) (nth 1 tab)))
 
 (defun health--add-to-table (tab)
-  (append tab (list (health--options tab))))
+  (append tab (list (health--prompt-add tab))))
 
 (health--add-to-table exercises)
 #+end_src
