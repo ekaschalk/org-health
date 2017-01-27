@@ -397,7 +397,7 @@ print([y['name'] for x in df for y in x['activities']])
 | pushups | push                | no     | yes      |
 | scaps   | pull                | no     | no       |
 
-** Current
+* Current
 #+NAME: tab-exercises-updat
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
 (cl-defun health--read (HEADER OPTIONS &optional (FORMAT-FUNC #'-list))
@@ -421,7 +421,7 @@ print([y['name'] for x in df for y in x['activities']])
 
 (defun health--add-to-table (TABLE)
   """Prompts and appends row to TABLE"""
-  (append TABLE (list (health--prompt-add TABLE))))
+  (append TABLE (list (health--prompt-add TABLE)))) ; can be replaced with :results append
 
 (defun health--prompt-table ()
   """Collects and prompts a table name"""
@@ -439,12 +439,35 @@ print([y['name'] for x in df for y in x['activities']])
                                    (health--table-values TABLE)))))
     (health--read "By value" options)))
 
+(defvar health--prompt-askp nil) ; Hacky fix to org babel multi helm calls
+(defun health--select-table ()
+  (if health--prompt-askp
+      (progn 
+        (setq health--prompt-askp nil)
+        (princ (format "table=%s" (health--prompt-table))))
+    (progn
+      (setq heatlh--prompt-askp t)
+      (princ (format "table=%s" "\"Never occurs\"")))))
+
 ; (health--add-to-table exercises)
 ; (health--collect-tables)
 ; (health--prompt-table)
-(health--narrow-table exercises)
+; (health--narrow-table exercises)
+; (health--select-table)
 #+end_src
 
 #+RESULTS: tab-exercises-updat
-: yes
+: prompt-ask
 
+* Table Ops
+#+NAME: a
+#+begin_src emacs-lisp :var (health--select-table)
+table
+#+end_src
+
+#+RESULTS: a
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+| pullups | pull                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
