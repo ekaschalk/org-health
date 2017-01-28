@@ -1,314 +1,4 @@
-* Old
-** Features
-*** Fitbit
- - task
-   - org task -> add_alarm || update_alarm
-   - delete task || manual -> delete_alarm
- - workout
-   - org capture workout -> log_activity
-   - fitbit workout -> clean -> (add detail) -> org workout
-   - capture
-     - tags: ['mobility', 'pull', 'push', 'legs', 'skill', 'hike']
-     - data: ['workout-link']
-   - fitbit
-     - tags: ['run', 'yoga', 'weights', 'treadmill']
-     - data: ['distance', 'workout-link', 'avg-mph', 'time']
-
- just need base http blocks and can rerun with different arguments as required      
-
- #+begin_src http :pretty
-GET https://api.fitbit.com/1/user/-/activities/date/2017-01-01.json
-Accept-Language: en_US
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0RDYyU1AiLCJhdWQiOiIyMjg3NFEiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3aHIgd251dCB3cHJvIHdzbGUgd3dlaSB3c29jIHdzZXQgd2FjdCB3bG9jIiwiZXhwIjoxNTE0ODc2ODkyLCJpYXQiOjE0ODMzNDA4OTJ9.MfyOC9u8RiHNQP5npfwp6GktfRMeQcUzBdoIs7ixjv0
- #+end_src      
-
- #+RESULTS:
- #+begin_example
-{
-  "summary": {
-    "veryActiveMinutes": 95,
-    "steps": 16361,
-    "sedentaryMinutes": 1206,
-    "restingHeartRate": 69,
-    "marginalCalories": 1353,
-    "lightlyActiveMinutes": 97,
-    "heartRateZones": [
-      {
-        "name": "Out of Range",
-        "minutes": 633,
-        "min": 30,
-        "max": 98,
-        "caloriesOut": 1087.38792
-      },
-      {
-        "name": "Fat Burn",
-        "minutes": 159,
-        "min": 98,
-        "max": 137,
-        "caloriesOut": 1098.87822
-      },
-      {
-        "name": "Cardio",
-        "minutes": 41,
-        "min": 137,
-        "max": 167,
-        "caloriesOut": 546.26238
-      },
-      {
-        "name": "Peak",
-        "minutes": 3,
-        "min": 167,
-        "max": 220,
-        "caloriesOut": 28.3878
-      }
-    ],
-    "floors": 51,
-    "fairlyActiveMinutes": 42,
-    "elevation": 510,
-    "distances": [
-      {
-        "distance": 9.27,
-        "activity": "total"
-      },
-      {
-        "distance": 9.27,
-        "activity": "tracker"
-      },
-      {
-        "distance": 0,
-        "activity": "loggedActivities"
-      },
-      {
-        "distance": 6.93,
-        "activity": "veryActive"
-      },
-      {
-        "distance": 0.9,
-        "activity": "moderatelyActive"
-      },
-      {
-        "distance": 1.31,
-        "activity": "lightlyActive"
-      },
-      {
-        "distance": 0.12,
-        "activity": "sedentaryActive"
-      }
-    ],
-    "caloriesOut": 3611,
-    "caloriesBMR": 1946,
-    "activityCalories": 1864,
-    "activeScore": -1
-  },
-  "goals": {
-    "steps": 10000,
-    "floors": 10,
-    "distance": 5,
-    "caloriesOut": 3132,
-    "activeMinutes": 30
-  },
-  "activities": []
-}
- #+end_example
-
-** API
-*** Alarms
- add_alarm(device_id, alarm_time, week_days, recurring=False, enabled=True, label=None, snooze_length=None, snooze_count=None, vibe='DEFAULT')
- delete_alarm(device_id, alarm_id)
- update_alarm(device_id, alarm_id, alarm_time, week_days, recurring=False, enabled=True, label=None, snooze_length=None, snooze_count=None, vibe='DEFAULT')
-*** Activities
- # No args -> gets, Args -> sets
- activities_daily_goal(calories_out=None, active_minutes=None, floors=None, distance=None, steps=None)
- activities_weekly_goal(distance=None, floors=None, steps=None)
-
- # Time series (1min or 15min)
- intraday_time_series(resource, base_date='today', detail_level='1min', start_time=None, end_time=None)
- time_series(resource, user_id=None, base_date='today', period=None, end_date=None)
-
- # GPS data can be retrieved using:
- https://dev.fitbit.com/docs/activity/#get-activity-tcx
-*** Logging
- # log - https://dev.fitbit.com/docs/activity/#log-activity
- activities_list()  # all activities in tree structure
- log_activity(data)
- log_sleep(start_time, duration)
- data = {
-     "activityLog":{
-         "activityId":12030,
-         "activityParentId":90009,
-         "calories":197,
-         "description":"5 mph (12 min/mile)",
-         "distance":3.34,  # only when relevant
-         "duration":1800000,
-         "isFavorite":false,
-         "logId":132394,
-         "name":"Running",
-         "startTime":"12:20",
-         "steps":2970  # walking or running only
-     }
- }
-** Code
-*** Models
- #+NAME: fitbit-models
- #+begin_src python :tangle models.py
-class Task(object):
-    types = ['life', 'work', 'goal', 'fitness', 'habit']
-
-    def __init__(self, task):
-        self.task = task  # task is a parsed todo
-
-class Subject(object):
-    pass
-
-class Goal(Subject):
-    types = ['life', 'work', 'fitness']
-
-class Series(Subject):
-    pass
-
-
-class Activity(object):
-    pass
-
-
-class FitbitResource(object):
-    activities = [
-        'steps', 'distance', 'floors', 'elevation',
-        'calories', 'caloriesBMR', 'activityCalories',
-        'minutesSedentary', 'minutesLightlyActive',
-        'minutesFairlyActive', 'minutesVeryActive',
-    ]
-    sleep = [
-        'startTime', 'timeInBed', 'efficiency', 'awakeningsCount',
-        'minutesAwake','minutesAsleep',
-        'minutesToFallAsleep', 'minutesAfterWakeup',
-    ]
-    body = ['bmi', 'fat', 'weight']
-    heart = ['heart']
-
-
-class Exercise(object):
-    types = ['run', 'mobility', 'pull', 'push', 'legs', 'skill', 'hike']
-
- #+end_src
-*** Client
- #+NAME: fitbit-client
- #+begin_src python :tangle client.py
-import os
-
-import fitbit
-
-import models
-
-
-def request(subject, activity):
-    if subject == 'goal':
-        pass
-
-    def wrap(func):
-        if activity == 'run':
-            pass  # where to store
-
-        def _wrap(*args, **kwargs):
-            try:
-                # transform to dataframe/org-table
-                return func(*args, **kwargs)
-            except:  # 429 -> rate limit, 150 per hour
-                pass
-
-        return _wrap
-    return wrap
-
-
-class MyFitbit(fitbit.Fitbit):
-    def __init__(self):
-        super().__init__(os.environ['FITBIT_CLIENT_ID'],
-                         os.environ['FITBIT_CLIENT_SECRET'],
-                         access_token=os.environ['FITBIT_ACCESS_TOKEN'])
-
-    # @request(models.Series, models.Run)
-    def runs(self, period):
-        self.time_series('activities/distance', period=period)
- #+end_src
-*** Interact
- #+NAME: fitbit-request
- #+begin_src python :results output
-from client import MyFitbit
-
-
-client = MyFitbit()
-
-# res = client.time_series('activities/distance', period='7d')
-res = client.activities_list()
-
-print(res)
- #+end_src
-
- #+NAME: fitbit-interact
- #+begin_src python :results output :var res=fitbit-request
-import pandas as pd
-
-
-df = eval(res)
-
-df = pd.DataFrame(df['categories'])
-
-# print(df)
-
-# print(df['activities'][11])
-# print(df['subCategories'][11])
-df = df['subCategories'][11]
-
-print([y['name'] for x in df for y in x['activities']])
-
-'Stretching'
-'Weights'
-'Run'
-'Treadmill'
- #+end_src
-* Notes
-** Tasks
-*** TODO xxx
-** Links
-1. [[http://orgmode.org/manual/Template-expansion.html]]
-2. [[https://github.com/emacs-helm/helm/wiki/Developing]]
-* Lisp
-** old-core
-#+begin_src emacs-lisp
-(defun ek/read-sets (timed &optional sets)
-  (let ((rep (read-string (if timed "Time: " "Reps: "))))
-    (if (string= "" rep)
-        sets
-      (if timed
-          (ek/read-sets timed
-                        (push rep sets))
-        (let ((weight (read-string "Weight: ")))
-          (ek/read-sets timed
-                        (push (list rep weight)
-                              sets)))))))
-
-(defun ek/helm (&optional workouts)
-  (let* ((pull '(- nil
-                   pullups nil
-                   scapular-retractions t
-                   german-hang t))
-         (push '(- bench ohp dips pushups))
-         (legs '(- squat deadlift))
-         (skills '(- handstand lsit))
-         (warmup '(- plank bridge side-plank superman))
-         (exercise
-          (helm :sources (helm-build-sync-source "Workout"
-                           :candidates (lambda () (-slice pull 0 -1 2))
-                           :fuzzy-match t)
-                :buffer "*helm workout*")))
-    (if (string= "-" exercise)
-        workouts
-      (ek/helm
-       (append (list exercise
-                     (ek/read-sets (plist-get pull (read exercise))))
-               workouts)))))
-#+end_src
-** Other
+* Previous
 #+NAME: scratch
 #+begin_src emacs-lisp
 ;; (setq org-capture-templates
@@ -365,8 +55,8 @@ print([y['name'] for x in df for y in x['activities']])
 
 (setq org-capture-templates ek/cardio-templates)
 #+end_src
-** Tables
-*** Copies
+* Tables
+** Copies
 # STRENGTH
 | Name | Category            | Timed  | Weighted |
 |      | push/pull/legs/core | yes/no | yes/no   |
@@ -378,7 +68,7 @@ print([y['name'] for x in df for y in x['activities']])
 |      | push/pull/legs/core | yes/no | yes/no   |
 |------+---------------------+--------+----------|
 |    3 | 4                   | 5      | 1        |
-*** Building
+** Building
 #+NAME: tab-workout
 #+RESULTS: tab-workout-update
 | Name    | Type                | Timed  | Weighted |
@@ -396,7 +86,6 @@ print([y['name'] for x in df for y in x['activities']])
 | pullups | pull                | yes    | yes      |
 | pushups | push                | no     | yes      |
 | scaps   | pull                | no     | no       |
-
 * Current
 #+NAME: tab-exercises-updat
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
@@ -414,24 +103,24 @@ print([y['name'] for x in df for y in x['activities']])
 (defun health--table-options-format () (-partial #'s-split "/"))
 
 (defun health--prompt-add (TABLE)
-  """Prompts a row for TABLE"""
+  "Prompts a row for TABLE"
   ;; (--zip-with (health--read it (s-split "/" other))
   (--zip-with (health--read it other (health--table-options-format))
               (health--table-headers TABLE)
               (health--table-options TABLE)))
 
 (defun health--add-to-table (TABLE)
-  """Prompts and appends row to TABLE"""
+  "Prompts and appends row to TABLE"
   (append TABLE (list (health--prompt-add TABLE)))) ; can be replaced with :results append
 
 (defun health--prompt-table ()
-  """Collects and prompts a table name"""
+  "Collects and prompts a table name"
   (health--read "Table"
                 (org-element-map (org-element-parse-buffer 'element) 'table
                   (-partial #'org-element-property :name))))
 
 (defun health--narrow-table (TABLE)
-  """Filters TABLE on prompted column"""
+  "Filters TABLE on prompted column"
   (let* ((headers (health--table-headers TABLE))
          (column (-elem-index
                   (health--read "Filter" headers) headers))
@@ -441,17 +130,21 @@ print([y['name'] for x in df for y in x['activities']])
     (health--read "By value" options)))
 
 (defun health--get-table ()
+  "Prompts for table and returns its lisp representation"
   (save-excursion
-    (let* ((tables (org-element-map (org-element-parse-buffer 'element) 'table
-                     (lambda (table)
-                       (let ((name (org-element-property :name table)))
-                         (when name
-                           (-list ':name name
-                                  ':contents-begin (org-element-property :contents-begin table)))))))
-           (selection (health--read
-                       "Table" (--map (plist-get it ':name) tables)))
-           (table (--first (string= selection (plist-get it ':name))
-                          tables))
+    (let* ((tables
+            (org-element-map (org-element-parse-buffer 'element) 'table
+              (lambda (table)
+                (let ((name (org-element-property :name table)))
+                  (when name
+                    (-list ':name name
+                           ':contents-begin (org-element-property :contents-begin table)))))))
+           (selection
+            (health--read "Table"
+                         (--map (plist-get it ':name) tables)))
+           (table
+            (--first (string= selection (plist-get it ':name))
+                    tables))
            (pos (plist-get table :contents-begin)))
       (goto-char pos)
       (org-table-to-lisp))))
@@ -468,20 +161,5 @@ print([y['name'] for x in df for y in x['activities']])
 |         | push/pull/legs/core | yes/no | yes/no   |
 |---------+---------------------+--------+----------|
 | pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
-
-* Table Ops
-# #+begin_src emacs-lisp :var (health--select-table)
-#+NAME: a
-#+begin_src emacs-lisp :prologue (health--select-table)
-; (org-table-to-lisp)
-table
-#+end_src
-
-#+RESULTS: a
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-| pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
+| hi      | push                | yes    | no       |
+| h       | b                   | c      | d        |
