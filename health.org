@@ -415,6 +415,7 @@ print([y['name'] for x in df for y in x['activities']])
 
 (defun health--prompt-add (TABLE)
   """Prompts a row for TABLE"""
+  ;; (--zip-with (health--read it (s-split "/" other))
   (--zip-with (health--read it other (health--table-options-format))
               (health--table-headers TABLE)
               (health--table-options TABLE)))
@@ -439,29 +440,42 @@ print([y['name'] for x in df for y in x['activities']])
                                    (health--table-values TABLE)))))
     (health--read "By value" options)))
 
-(defvar health--prompt-askp nil) ; Hacky fix to org babel multi helm calls
-(defun health--select-table ()
-  (if health--prompt-askp
-      (progn 
-        (setq health--prompt-askp nil)
-        (princ (format "table=%s" (health--prompt-table))))
-    (progn
-      (setq heatlh--prompt-askp t)
-      (princ (format "table=%s" "\"Never occurs\"")))))
+(defun health--get-table ()
+  (save-excursion
+    (let* ((tables (org-element-map (org-element-parse-buffer 'element) 'table
+                     (lambda (table)
+                       (let ((name (org-element-property :name table)))
+                         (when name
+                           (-list ':name name
+                                  ':contents-begin (org-element-property :contents-begin table)))))))
+           (selection (health--read
+                       "Table" (--map (plist-get it ':name) tables)))
+           (table (--first (string= selection (plist-get it ':name))
+                          tables))
+           (pos (plist-get table :contents-begin)))
+      (goto-char pos)
+      (org-table-to-lisp))))
 
 ; (health--add-to-table exercises)
 ; (health--collect-tables)
 ; (health--prompt-table)
 ; (health--narrow-table exercises)
-; (health--select-table)
+(health--get-table)
 #+end_src
 
 #+RESULTS: tab-exercises-updat
-: prompt-ask
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
 
 * Table Ops
+# #+begin_src emacs-lisp :var (health--select-table)
 #+NAME: a
-#+begin_src emacs-lisp :var (health--select-table)
+#+begin_src emacs-lisp :prologue (health--select-table)
+; (org-table-to-lisp)
 table
 #+end_src
 
