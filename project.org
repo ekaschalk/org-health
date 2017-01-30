@@ -109,15 +109,15 @@
               (health--table-headers TABLE)
               (health--table-options TABLE)))
 
-(defun health--add-to-table (TABLE)
-  "Prompts and appends row to TABLE"
-  (append TABLE (list (health--prompt-add TABLE)))) ; can be replaced with :results append
-
 (defun health--prompt-table ()
   "Collects and prompts a table name"
   (health--read "Table"
                 (org-element-map (org-element-parse-buffer 'element) 'table
                   (-partial #'org-element-property :name))))
+
+(defun health--add-to-table (TABLE)
+  "Prompts and appends row to TABLE"
+  (append TABLE (list (health--prompt-add TABLE)))) ; can be replaced with :results append
 
 (defun health--narrow-table (TABLE)
   "Filters TABLE on prompted column"
@@ -153,7 +153,8 @@
 ; (health--collect-tables)
 ; (health--prompt-table)
 ; (health--narrow-table exercises)
-(health--get-table)
+; (health--get-table)
+(health--add-to-table (health--get-table))
 #+end_src
 
 #+RESULTS: tab-exercises-updat
@@ -163,3 +164,4 @@
 | pullups | pull                | yes    | yes      |
 | hi      | push                | yes    | no       |
 | h       | b                   | c      | d        |
+| nil     | push                | yes    | yes      |
