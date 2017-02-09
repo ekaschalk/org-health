@@ -24,70 +24,7 @@
 
 #+end_src
 
-#+NAME: configure
-#+begin_src emacs-lisp
-(setq org-global-properties
-      '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
-        ("INTENSITY_ALL" . "easy normal hard")
-        ("PLAN_ALL" . "file:c:/Dev/health/health.org")
-
-        ("RUN_ROUTE_ALL" . "kanan lindero trails")
-        ("HIKE_ROUTE_ALL" . "china-flats home-trail")
-
-        ("SKILL_ALL" . "handstands lsit support-hold")
-        ("PUSH_ALL" . "")
-))
-#+end_src
-
-#+NAME: templates
-#+begin_src emacs-lisp
-(setq ek/cardio-templates
-      (let* ((workouts "c:/Dev/health/workouts.org")
-             (hl "Test")
-
-             (base "* DONE Run => %(ek/helm) %^T")
-             (tags ":fitness:cardio:run:")
-             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p %^{RUN_ROUTE}p")
-             (end "\n%i%?")
-
-             (full (s-join " " `(,base ,tags ,props ,end))))
-        `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
-
-(setq org-capture-templates ek/cardio-templates)
-#+end_src
-* Tables
-** Copies
-# STRENGTH
-| Name | Category            | Timed  | Weighted |
-|      | push/pull/legs/core | yes/no | yes/no   |
-|------+---------------------+--------+----------|
-|    3 | 4                   | 5      | 1        |
-
-# MOBILITY
-| Name | Type                | Timed  | Weighted |
-|      | push/pull/legs/core | yes/no | yes/no   |
-|------+---------------------+--------+----------|
-|    3 | 4                   | 5      | 1        |
-** Building
-#+NAME: tab-workout
-#+RESULTS: tab-workout-update
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| hi      | push                | yes    | no       |
-| h       | b                   | c      |  d       |
-
-#+NAME: tab-exercises
-#+RESULTS: tab-exercises-update
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
-* Current
-#+NAME: tab-exercises-updat
+#+NAME: old-stuff
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
 (cl-defun health--read (HEADER OPTIONS &optional (FORMAT-FUNC #'-list))
   """HEADER prompts resulting list of strings from FORMAT-FUNC applied to OPTIONS"""
@@ -157,11 +94,85 @@
 (health--add-to-table (health--get-table))
 #+end_src
 
-#+RESULTS: tab-exercises-updat
+#+NAME: configure
+#+begin_src emacs-lisp
+(setq org-global-properties
+      '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
+        ("INTENSITY_ALL" . "easy normal hard")
+        ("PLAN_ALL" . "file:c:/Dev/health/health.org")
+
+        ("RUN_ROUTE_ALL" . "kanan lindero trails")
+        ("HIKE_ROUTE_ALL" . "china-flats home-trail")
+
+        ("SKILL_ALL" . "handstands lsit support-hold")
+        ("PUSH_ALL" . "")
+))
+#+end_src
+
+#+NAME: templates
+#+begin_src emacs-lisp
+(setq ek/cardio-templates
+      (let* ((workouts "c:/Dev/health/workouts.org")
+             (hl "Test")
+
+             (base "* DONE Run => %(ek/helm) %^T")
+             (tags ":fitness:cardio:run:")
+             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p %^{RUN_ROUTE}p")
+             (end "\n%i%?")
+
+             (full (s-join " " `(,base ,tags ,props ,end))))
+        `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
+
+(setq org-capture-templates ek/cardio-templates)
+#+end_src
+* Tables
+** Copies
+# STRENGTH
+| Name | Category            | Timed  | Weighted |
+|      | push/pull/legs/core | yes/no | yes/no   |
+|------+---------------------+--------+----------|
+|    3 | 4                   | 5      | 1        |
+
+# MOBILITY
+| Name | Type                | Timed  | Weighted |
+|      | push/pull/legs/core | yes/no | yes/no   |
+|------+---------------------+--------+----------|
+|    3 | 4                   | 5      | 1        |
+** Building
+#+NAME: tab-workout
+#+RESULTS: tab-workout-update
 | Name    | Type                | Timed  | Weighted |
 |         | push/pull/legs/core | yes/no | yes/no   |
 |---------+---------------------+--------+----------|
 | pullups | pull                | yes    | yes      |
 | hi      | push                | yes    | no       |
-| h       | b                   | c      | d        |
+| h       | b                   | c      |  d       |
+
+* current
+#+NAME: tab-exercises
+#+RESULTS: tab-exercises-update
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
+
+#+NAME: interact
+#+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
+; (health--add-to-table exercises)
+; (health--collect-tables)
+; (health--prompt-table)
+; (health--narrow-table exercises)
+; (health--get-table)
+(health--add-to-table (health--get-table))
+#+end_src
+
+#+RESULTS: interact
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
 | nil     | push                | yes    | yes      |
