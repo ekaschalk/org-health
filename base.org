@@ -163,16 +163,10 @@
 ; (health--add-to-table exercises)
 ; (health--collect-tables)
 ; (health--prompt-table)
-; (health--narrow-table exercises)
+(health--narrow-table exercises)
 ; (health--get-table)
-(health--add-to-table (health--get-table))
+; (health--add-to-table (health--prompt-table))
 #+end_src
 
 #+RESULTS: interact
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
-| nil     | push                | yes    | yes      |
+: yes
