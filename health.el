@@ -4,7 +4,7 @@
   (health--prompt-read
    "Table"
    (org-element-map (org-element-parse-buffer 'element) 'table
-     (-partial #'org-element-property :name))))
+     (-partial 'org-element-property :name))))
 
 ;;; Tables
 ;;;; Parsers
@@ -39,13 +39,12 @@
              (health--parse-table-options TABLE)))
 
 (defun health--prompt-table ()
-  "Prompts tables and returns its lisp representation"
+  "Prompts a table and returns its lisp representation"
   (save-excursion
     (-let* ((tables (health--parse-tables))
             (table-name
              (health--prompt-read "Table" (--map (plist-get it :name) tables)))
-            (table
-             (--first (string= table-name (plist-get it :name)) tables))
+            (table (--first (member table-name it) tables))
             ((&plist :contents-begin pos) table))
       (goto-char pos)
       (org-table-to-lisp))))
@@ -58,11 +57,11 @@
          (filter (health--prompt-read "Filter" headers))
          (column (-elem-index filter headers))
          (options (-distinct (-select-column column table-data))))
-    (health--prompt-read "By value" options)))
+    (health--prompt-read "Options" options)))
 
 ;;;; Utilities
 (defun health--add-to-table ()
-  "Prompts and appends row to TABLE"
+  "Prompts a table and appends a prompted row"
   (let* ((table (health--prompt-table))
          (row (health--prompt-row table)))
     (-snoc table row)))

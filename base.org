@@ -175,4 +175,4 @@
 | pullups | pull                | yes    | yes      |
 | pushups | push                | no     | yes      |
 | scaps   | pull                | no     | no       |
-| f       | push                | yes    | yes      |
+| b       | push                | no     | yes      |
