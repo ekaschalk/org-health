@@ -169,4 +169,10 @@
 #+end_src
 
 #+RESULTS: interact
-| hi | push | yes | yes |
+| Name    | Type                | Timed  | Weighted |
+|         | push/pull/legs/core | yes/no | yes/no   |
+|---------+---------------------+--------+----------|
+| pullups | pull                | yes    | yes      |
+| hi      | push                | yes    | no       |
+| h       | b                   | c      | d        |
+| hi      | push                | yes    | yes      |

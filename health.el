@@ -14,15 +14,12 @@
   (nth 1 TABLE))
 (defun health--table-values (TABLE)
   (-slice TABLE (+ 1 (-elem-index 'hline TABLE))))
-(defun health--table-options-format ()
-  (-partial #'s-split "/"))
 
 ;;;; Prompts
 (defun health--read (HEADER OPTIONS)
   "HEADER prompts OPTIONS a list of strings or nil for non-helm reading"
   (if (not OPTIONS)
-      (read-string
-       (concat HEADER ": "))
+      (read-string (concat HEADER ": "))
     (helm :sources (helm-build-sync-source HEADER
                      :candidates OPTIONS
                      :fuzzy-match t))))
@@ -31,8 +28,7 @@
   "Prompts a row for TABLE according to its headers and options."
   (-zip-with 'health--read
              (health--table-headers TABLE)
-             (--map (unless (string= "" it)
-                     (s-split "/" it))
+             (--map (s-split "/" it t)
                    (health--table-options TABLE))))
 
 (defun health--prompt-table ()
@@ -41,12 +37,11 @@
     (let* ((tables
             (org-element-map (org-element-parse-buffer 'element) 'table
               (lambda (table)
-                (let ((name (org-element-property :name table)))
-                  (when name
-                    (-list ':name
-                           name
-                           ':contents-begin
-                           (org-element-property :contents-begin table)))))))
+                (when-let ((name (org-element-property :name table)))
+                  (-list ':name
+                         name
+                         ':contents-begin
+                         (org-element-property :contents-begin table))))))
            (selection
             (health--read "Table" (--map (plist-get it ':name) tables)))
            (table
@@ -70,4 +65,4 @@
 (defun health--add-to-table ()
   "Prompts and appends row to TABLE"
   (let ((table (health--prompt-table)))
-    (append (list (health--prompt-row table)))))
+    (-snoc table (health--prompt-row table))))
