@@ -173,6 +173,6 @@
 |         | push/pull/legs/core | yes/no | yes/no   |
 |---------+---------------------+--------+----------|
 | pullups | pull                | yes    | yes      |
-| hi      | push                | yes    | no       |
-| h       | b                   | c      | d        |
-| hi      | push                | yes    | yes      |
+| pushups | push                | no     | yes      |
+| scaps   | pull                | no     | no       |
+| f       | push                | yes    | yes      |
