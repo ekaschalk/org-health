@@ -163,10 +163,10 @@
 ; (health--add-to-table exercises)
 ; (health--collect-tables)
 ; (health--prompt-table)
-(health--narrow-table exercises)
+; (health--narrow-table exercises)
 ; (health--get-table)
-; (health--add-to-table (health--prompt-table))
+(health--add-to-table)
 #+end_src
 
 #+RESULTS: interact
-: yes
+| hi | push | yes | yes |

@@ -18,22 +18,22 @@
   (-partial #'s-split "/"))
 
 ;;;; Prompts
-(cl-defun health--read (HEADER OPTIONS &optional (FORMAT-FUNC #'-list))
-  "HEADER prompts resulting list of strings from FORMAT-FUNC applied to OPTIONS"
-  (if (or (not OPTIONS)
-          (eq "" OPTIONS))
+(defun health--read (HEADER OPTIONS)
+  "HEADER prompts OPTIONS a list of strings or nil for non-helm reading"
+  (if (not OPTIONS)
       (read-string
        (concat HEADER ": "))
     (helm :sources (helm-build-sync-source HEADER
-                     :candidates (lambda () (funcall FORMAT-FUNC OPTIONS))
+                     :candidates OPTIONS
                      :fuzzy-match t))))
 
-(defun health--prompt-add-to (TABLE)
+(defun health--prompt-row (TABLE)
   "Prompts a row for TABLE according to its headers and options."
-  ;; (--zip-with (health--read it (s-split "/" other))
-  (--zip-with (health--read it other (health--table-options-format))
-              (health--table-headers TABLE)
-              (health--table-options TABLE)))
+  (-zip-with 'health--read
+             (health--table-headers TABLE)
+             (--map (unless (string= "" it)
+                     (s-split "/" it))
+                   (health--table-options TABLE))))
 
 (defun health--prompt-table ()
   "Prompts tables and returns its lisp representation"
@@ -67,6 +67,7 @@
     (health--read "By value" options)))
 
 ;;;; Utilities
-(defun health--add-to-table (TABLE)
+(defun health--add-to-table ()
   "Prompts and appends row to TABLE"
-  (append TABLE (list (health--prompt-add TABLE))))
+  (let ((table (health--prompt-table)))
+    (append (list (health--prompt-row table)))))
