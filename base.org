@@ -1,144 +1,5 @@
-* Previous
-#+NAME: scratch
-#+begin_src emacs-lisp
-;; (setq org-capture-templates
-;;         ("c" "Cardio")  ; run, hike, walk, track
-;;         ("m" "Mobility")  ; warmup, yoga, dynamic
-;;         ("w" "Workout")  ; skill, push, pull, leg
-
-(;; defun health--table-headers (tab)
- ;;  (--map (concat ":" it)
- ;;         (-first-item tab)))
-
-(;; defun health--table-headers-format (tab)
- ;;  (-zip-with #'concat
- ;;   (-first-item tab)
- ;;   (--map (if (string= "" it)
- ;;              ": "
- ;;            (format "[%s]: " it))
- ;;         (nth 1 tab))))
-
-;; (defun health--table-to-plist (tab)
-;;  (--map (-interleave (health--table-headers tab) it)
-;;         (-slice tab 2)))
-
-#+end_src
-
-#+NAME: old-stuff
-#+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
-(cl-defun health--read (HEADER OPTIONS &optional (FORMAT-FUNC #'-list))
-  """HEADER prompts resulting list of strings from FORMAT-FUNC applied to OPTIONS"""
-  (if (or (not OPTIONS) (eq "" OPTIONS))
-      (read-string (concat HEADER ": "))
-    (helm :sources (helm-build-sync-source HEADER
-                     :candidates (lambda () (funcall FORMAT-FUNC OPTIONS))
-                     :fuzzy-match t))))
-
-(defun health--table-headers (TABLE) (nth 0 TABLE))
-(defun health--table-options (TABLE) (nth 1 TABLE))
-(defun health--table-values (TABLE) (-slice TABLE (+ 1 (-elem-index 'hline TABLE))))
-(defun health--table-options-format () (-partial #'s-split "/"))
-
-(defun health--prompt-add (TABLE)
-  "Prompts a row for TABLE"
-  ;; (--zip-with (health--read it (s-split "/" other))
-  (--zip-with (health--read it other (health--table-options-format))
-              (health--table-headers TABLE)
-              (health--table-options TABLE)))
-
-(defun health--prompt-table ()
-  "Collects and prompts a table name"
-  (health--read "Table"
-                (org-element-map (org-element-parse-buffer 'element) 'table
-                  (-partial #'org-element-property :name))))
-
-(defun health--add-to-table (TABLE)
-  "Prompts and appends row to TABLE"
-  (append TABLE (list (health--prompt-add TABLE)))) ; can be replaced with :results append
-
-(defun health--narrow-table (TABLE)
-  "Filters TABLE on prompted column"
-  (let* ((headers (health--table-headers TABLE))
-         (column (-elem-index
-                  (health--read "Filter" headers) headers))
-         (options (-distinct
-                   (-select-column column
-                                   (health--table-values TABLE)))))
-    (health--read "By value" options)))
-
-(defun health--get-table ()
-  "Prompts for table and returns its lisp representation"
-  (save-excursion
-    (let* ((tables
-            (org-element-map (org-element-parse-buffer 'element) 'table
-              (lambda (table)
-                (let ((name (org-element-property :name table)))
-                  (when name
-                    (-list ':name name
-                           ':contents-begin (org-element-property :contents-begin table)))))))
-           (selection
-            (health--read "Table"
-                         (--map (plist-get it ':name) tables)))
-           (table
-            (--first (string= selection (plist-get it ':name))
-                    tables))
-           (pos (plist-get table :contents-begin)))
-      (goto-char pos)
-      (org-table-to-lisp))))
-
-; (health--add-to-table exercises)
-; (health--collect-tables)
-; (health--prompt-table)
-; (health--narrow-table exercises)
-; (health--get-table)
-(health--add-to-table (health--get-table))
-#+end_src
-
-#+NAME: configure
-#+begin_src emacs-lisp
-(setq org-global-properties
-      '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90")
-        ("INTENSITY_ALL" . "easy normal hard")
-        ("PLAN_ALL" . "file:c:/Dev/health/health.org")
-
-        ("RUN_ROUTE_ALL" . "kanan lindero trails")
-        ("HIKE_ROUTE_ALL" . "china-flats home-trail")
-
-        ("SKILL_ALL" . "handstands lsit support-hold")
-        ("PUSH_ALL" . "")
-))
-#+end_src
-
-#+NAME: templates
-#+begin_src emacs-lisp
-(setq ek/cardio-templates
-      (let* ((workouts "c:/Dev/health/workouts.org")
-             (hl "Test")
-
-             (base "* DONE Run => %(ek/helm) %^T")
-             (tags ":fitness:cardio:run:")
-             (props "%^{DURATION}p %^{INTENSITY}p %^{PLAN}p %^{RUN_ROUTE}p")
-             (end "\n%i%?")
-
-             (full (s-join " " `(,base ,tags ,props ,end))))
-        `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
-
-(setq org-capture-templates ek/cardio-templates)
-#+end_src
-* Tables
-** Copies
-# STRENGTH
-| Name | Category            | Timed  | Weighted |
-|      | push/pull/legs/core | yes/no | yes/no   |
-|------+---------------------+--------+----------|
-|    3 | 4                   | 5      | 1        |
-
-# MOBILITY
-| Name | Type                | Timed  | Weighted |
-|      | push/pull/legs/core | yes/no | yes/no   |
-|------+---------------------+--------+----------|
-|    3 | 4                   | 5      | 1        |
-** Building
+* Core
+** Tables
 #+NAME: tab-workout
 #+RESULTS: tab-workout-update
 | Name    | Type                | Timed  | Weighted |
@@ -148,7 +9,6 @@
 | hi      | push                | yes    | no       |
 | h       | b                   | c      |  d       |
 
-* current
 #+NAME: tab-exercises
 #+RESULTS: tab-exercises-update
 | Name    | Type                | Timed  | Weighted |
@@ -158,13 +18,20 @@
 | pushups | push                | no     | yes      |
 | scaps   | pull                | no     | no       |
 
+** Configuring
+#+NAME: configure
+#+begin_src emacs-lisp
+#+end_src
+
+** Interact
+Want:
+1. Org-capture build a table of the workout that it places under header.
+2. Want there to be a small text representation of the workout for header.
+
 #+NAME: interact
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
-; (health--add-to-table exercises)
-; (health--collect-tables)
-; (health--prompt-table)
+; (health--parse-tables)
 ; (health--narrow-table exercises)
-; (health--get-table)
 (health--add-to-table)
 #+end_src
 
@@ -175,4 +42,4 @@
 | pullups | pull                | yes    | yes      |
 | pushups | push                | no     | yes      |
 | scaps   | pull                | no     | no       |
-| b       | push                | no     | yes      |
+| r       | push                | yes    | yes      |

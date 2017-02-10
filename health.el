@@ -7,6 +7,10 @@
      (-partial 'org-element-property :name))))
 
 ;;; Tables
+;;;; Configuration
+(setq health-tables-file "c:/~/dev/health/base.org"
+      health-workouts-file "c:/~/dev/health/workouts.org")
+
 ;;;; Parsers
 (defun health--parse-table-headers (TABLE)
   (car TABLE))
@@ -41,6 +45,7 @@
 (defun health--prompt-table ()
   "Prompts a table and returns its lisp representation"
   (save-excursion
+    (find-file health-tables-file)
     (-let* ((tables (health--parse-tables))
             (table-name
              (health--prompt-read "Table" (--map (plist-get it :name) tables)))
@@ -49,7 +54,7 @@
       (goto-char pos)
       (org-table-to-lisp))))
 
-;;;; Filters
+;;;; Narrow
 (defun health--narrow-table (TABLE)
   "Filters TABLE on prompted column"
   (let* ((headers (health--parse-table-headers TABLE))
@@ -59,9 +64,42 @@
          (options (-distinct (-select-column column table-data))))
     (health--prompt-read "Options" options)))
 
-;;;; Utilities
+;;;; Add
+(defun health--prompt-from-table ()
+  "Prompts a table and appends a prompted row"
+  (let* ((table (health--prompt-table))
+         (row (health--prompt-row table)))
+    (s-join " " row)))
+
 (defun health--add-to-table ()
   "Prompts a table and appends a prompted row"
   (let* ((table (health--prompt-table))
          (row (health--prompt-row table)))
     (-snoc table row)))
+
+;;;; Org Capture
+;; Might want to generalize, associate a table with props
+(setq health--workout-base-props
+      '(("DURATION_ALL" . "5 10 15 20 25 30 35 40 45 50 55 60 75 90")
+        ("INTENSITY_ALL" . "easy normal hard"))
+      health--workout-cardio-props
+      '(("DISTANCE_ALL" . "1 2 3 4 5 6 7 8 9"))
+      health--workout-strength-props
+      '(())
+      health--workout-skill-props
+      '(()))
+
+(setq health--cardio-templates
+      (let* ((workouts health-workouts-file)
+             (hl "Test")
+
+             (base "* DONE %^T Run => %(health--prompt-from-table)")
+             (tags ":fitness:cardio:run:")
+             (props "%^{DURATION}p %^{INTENSITY}p")
+             (end "\n%i%?")
+
+             (full (s-join " " `(,base ,tags ,props ,end))))
+        `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
+
+(setq org-global-properties health--workout-base-props)
+(setq org-capture-templates health--cardio-templates)

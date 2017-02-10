@@ -7,3 +7,18 @@
    :RUN_ROUTE: kanan
    :END:
 Here are some notes about the run
+** DONE Run => %![Error: (user-error No table at point)] <2018-02-08 Thu> :fitness:cardio:run:
+   :PROPERTIES:
+   :DURATION: 19
+   :INTENSITY: 10
+   :END:
+** DONE Run => 3 pull yes no <2017-02-10 Fri>            :fitness:cardio:run:
+   :PROPERTIES:
+   :DURATION: 10
+   :INTENSITY: 2
+   :END:
+** DONE <2017-02-10 Fri> Run => 10 legs yes no           :fitness:cardio:run:
+   :PROPERTIES:
+   :DURATION: 30
+   :INTENSITY: normal
+   :END:
