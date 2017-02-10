@@ -25,12 +25,11 @@ Want:
 1. Org-capture build a table of the workout that it places under header.
 2. Want there to be a small text representation of the workout for header.
 
-Select a name
-Prompt Sets
-If timed prompt Time(s) else Reps
-If weighted prompt Weight(lb):
-
-prompt-table -> (filter) -> prompt-name -> prompt-from-row
+Todo:
+1. Prompt for sets, and ask if adding more workouts.
+2. Possibly pull from multiple tables at once (workout can be composed of cardio
+   and strength and mobility rather than split capturing each time)
+3. remove the unused, account for no alternative/unbalanced prompts/options
 
 #+NAME: interact
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
@@ -40,7 +39,7 @@ prompt-table -> (filter) -> prompt-name -> prompt-from-row
 #+end_src
 
 #+RESULTS: interact
-| 1 | 5 |
+| 2 | 3 |
 
 
 

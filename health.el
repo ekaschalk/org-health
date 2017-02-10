@@ -59,15 +59,20 @@
   (let* ((name (health--prompt-column-values TABLE "Name"))
          (table-data (health--parse-table-data TABLE))
          (row-index (-elem-index name (-select-column 0 table-data)))
-         (row (nth row-index table-data)))
-    (-non-nil
-     (--zip-with (when other
-                  (health--prompt-read
-                   (nth (+ 1 (-elem-index it other)) other)))
-                row
-                (-zip-with '-interleave
-                           (health--parse-table-options TABLE)
-                           (health--parse-table-prompts TABLE))))))
+         (row (nth row-index table-data))
+         (sets '()))
+    (--dotimes (string-to-number (health--prompt-read "Sets"))
+      (add-to-list 'sets
+       (-non-nil
+        (--zip-with (when other
+                     (health--prompt-read
+                      (nth (+ 1 (-elem-index it other)) other)))
+                   row
+                   (-zip-with '-interleave  ; List of lists -> double zip
+                              (health--parse-table-options TABLE)
+                              (health--parse-table-prompts TABLE))))
+       t))  ; Append
+    sets))
 
 (defun health--prompt-table ()
   "Prompts a table and returns its lisp representation"
