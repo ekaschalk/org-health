@@ -2,44 +2,54 @@
 ** Tables
 #+NAME: tab-workout
 #+RESULTS: tab-workout-update
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| hi      | push                | yes    | no       |
-| h       | b                   | c      |  d       |
+| Name    | Type                | Timed         | Weighted          |
+|         | push/pull/legs/core | yes/no        | yes/no            |
+|         |                     | Timed(s)/Reps | Weight(lb)/unused |
+|---------+---------------------+---------------+-------------------|
+| pullups | pull                | yes           | yes               |
+| hi      | push                | yes           | no                |
+| h       | b                   | c             | d                 |
 
 #+NAME: tab-exercises
 #+RESULTS: tab-exercises-update
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
-
-** Configuring
-#+NAME: configure
-#+begin_src emacs-lisp
-#+end_src
+| Name    | Type                | Timed         | Weighted          |
+|         | push/pull/legs/core | yes/no        | yes/no            |
+|         |                     | Timed(s)/Reps | Weight(lb)/unused |
+|---------+---------------------+---------------+-------------------|
+| pullups | pull                | yes           | yes               |
+| pushups | push                | no            | yes               |
+| scaps   | pull                | no            | no                |
 
 ** Interact
 Want:
 1. Org-capture build a table of the workout that it places under header.
 2. Want there to be a small text representation of the workout for header.
 
+Select a name
+Prompt Sets
+If timed prompt Time(s) else Reps
+If weighted prompt Weight(lb):
+
+prompt-table -> (filter) -> prompt-name -> prompt-from-row
+
 #+NAME: interact
 #+begin_src emacs-lisp :var exercises=tab-exercises :colnames no :hlines yes
 ; (health--parse-tables)
-; (health--narrow-table exercises)
-(health--add-to-table)
+; (health--add-to-table)
+(health--prompt-from-table)
 #+end_src
 
 #+RESULTS: interact
-| Name    | Type                | Timed  | Weighted |
-|         | push/pull/legs/core | yes/no | yes/no   |
-|---------+---------------------+--------+----------|
-| pullups | pull                | yes    | yes      |
-| pushups | push                | no     | yes      |
-| scaps   | pull                | no     | no       |
-| r       | push                | yes    | yes      |
+| 1 | 5 |
+
+
+
+Test format for capturing
+| Name    | Type                | Timed         | Weighted          |
+|         | push/pull/legs/core | yes/no        | yes/no            |
+|         |                     | Timed(s)/Reps | Weight(lb)/unused |
+|---------+---------------------+---------------+-------------------|
+| pullups | pull                | yes           | yes               |
+| pushups | push                | no            | yes               |
+| scaps   | pull                | no            | no                |
+| r       | push                | yes           | yes               |

@@ -16,6 +16,8 @@
   (car TABLE))
 (defun health--parse-table-options (TABLE)
   (--map (s-split "/" it t) (nth 1 TABLE)))
+(defun health--parse-table-prompts (TABLE)
+  (--map (s-split "/" it t) (nth 2 TABLE)))
 (defun health--parse-table-data (TABLE)
   (-slice TABLE (+ 1 (-elem-index 'hline TABLE))))
 
@@ -28,19 +30,44 @@
                (org-element-property :contents-begin table))))))
 
 ;;;; Prompts
-(defun health--prompt-read (HEADER OPTIONS)
-  "HEADER prompts OPTIONS a list of strings or nil for non-helm reading"
-  (if (not OPTIONS)
-      (read-string (concat HEADER ": "))
-    (helm :sources (helm-build-sync-source HEADER
-                     :candidates OPTIONS
-                     :fuzzy-match t))))
+(defun health--prompt-read (HEADER &optional OPTIONS)
+  "HEADER prompts optional OPTIONS, a list of strings helm"
+  (if OPTIONS
+      (helm :sources (helm-build-sync-source HEADER :candidates OPTIONS))
+    (read-string (concat HEADER ": "))))
 
-(defun health--prompt-row (TABLE)
-  "Prompts a row for TABLE according to its headers and options."
+(defun health--prompt-new-row (TABLE)
+  "Prompts a new row for TABLE according to its headers and options."
   (-zip-with 'health--prompt-read
              (health--parse-table-headers TABLE)
              (health--parse-table-options TABLE)))
+
+(defun health--prompt-column (TABLE)
+  "Prompts a column from TABLE"
+  (health--prompt-read "Column" (health--parse-table-headers TABLE)))
+
+(defun health--prompt-column-values (TABLE COLUMN)
+  "Prompts unique values of COLUMN in TABLE"
+  (let* ((headers (health--parse-table-headers TABLE))
+         (table-data (health--parse-table-data TABLE))
+         (column (-elem-index COLUMN headers))
+         (options (-distinct (-select-column column table-data))))
+    (health--prompt-read "Options" options)))
+
+(defun health--prompt-row (TABLE)
+  "Assuming table has Name column, and it comes first"
+  (let* ((name (health--prompt-column-values TABLE "Name"))
+         (table-data (health--parse-table-data TABLE))
+         (row-index (-elem-index name (-select-column 0 table-data)))
+         (row (nth row-index table-data)))
+    (-non-nil
+     (--zip-with (when other
+                  (health--prompt-read
+                   (nth (+ 1 (-elem-index it other)) other)))
+                row
+                (-zip-with '-interleave
+                           (health--parse-table-options TABLE)
+                           (health--parse-table-prompts TABLE))))))
 
 (defun health--prompt-table ()
   "Prompts a table and returns its lisp representation"
@@ -54,27 +81,18 @@
       (goto-char pos)
       (org-table-to-lisp))))
 
-;;;; Narrow
-(defun health--narrow-table (TABLE)
-  "Filters TABLE on prompted column"
-  (let* ((headers (health--parse-table-headers TABLE))
-         (table-data (health--parse-table-data TABLE))
-         (filter (health--prompt-read "Filter" headers))
-         (column (-elem-index filter headers))
-         (options (-distinct (-select-column column table-data))))
-    (health--prompt-read "Options" options)))
-
 ;;;; Add
 (defun health--prompt-from-table ()
-  "Prompts a table and appends a prompted row"
+  "Prompts a table"
   (let* ((table (health--prompt-table))
          (row (health--prompt-row table)))
-    (s-join " " row)))
+    row))
+    ;; (s-join " " row)))
 
 (defun health--add-to-table ()
   "Prompts a table and appends a prompted row"
   (let* ((table (health--prompt-table))
-         (row (health--prompt-row table)))
+         (row (health--prompt-new-row table)))
     (-snoc table row)))
 
 ;;;; Org Capture
@@ -92,12 +110,10 @@
 (setq health--cardio-templates
       (let* ((workouts health-workouts-file)
              (hl "Test")
-
              (base "* DONE %^T Run => %(health--prompt-from-table)")
              (tags ":fitness:cardio:run:")
              (props "%^{DURATION}p %^{INTENSITY}p")
              (end "\n%i%?")
-
              (full (s-join " " `(,base ,tags ,props ,end))))
         `(("r" "Run" entry (file+headline ,workouts ,hl) ,full))))
 
